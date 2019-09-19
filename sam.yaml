@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: API services for api.fpki.io.
+Globals:
+  Api:
+    EndpointConfiguration: REGIONAL
+    Name: "api.fpki.io"
+Resources:
+  CATable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+          Name: caSKI
+          Type: String
+      TableName: fpki_list
+  CAGetAllFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'io.fpki.api.function.CAGetAllFunction::handleRequest'
+      Runtime: java8
+      Timeout: 15
+      MemorySize: 512
+      CodeUri: target/api.jar
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CATable
+        - DynamoDBReadPolicy:
+            TableName: fpki_trust_list
+      Events:
+        GetByQueryApi:
+          Type: Api
+          Properties:
+            Path: /ca
+            Method: GET
+  CAGetBySKIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'io.fpki.api.function.CAGetBySKIFunction::handleRequest'
+      Runtime: java8
+      Timeout: 15
+      MemorySize: 512
+      CodeUri: target/api.jar
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CATable
+        - DynamoDBReadPolicy:
+            TableName: fpki_trust_list
+      Events:
+        GetByPathApi:
+          Type: Api
+          Properties:
+            Path: /ca/{caSKI}
+            Method: GET
+  CACreateEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'io.fpki.api.function.CACreateEntryFunction::handleRequest'
+      Runtime: java8
+      Timeout: 15
+      MemorySize: 512
+      CodeUri: target/api.jar
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CATable
+        - DynamoDBReadPolicy:
+            TableName: fpki_trust_list
+      Events:
+        GetByPathApi:
+          Type: Api
+          Properties:
+            Path: /ca
+            Method: POST
