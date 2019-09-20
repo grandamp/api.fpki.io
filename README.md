@@ -4,6 +4,7 @@ API service for api.fpki.io
 - [Introduction](#introduction) 
 - [Quick Start](#quick-start)
 - [Documentation](#documentation)
+- [Security Considerations](#security-considerations)
 - [License](#license)
 
 
@@ -58,6 +59,18 @@ See http://docs.aws.amazon.com/lambda/latest/dg/deploying-lambda-apps.html.
 Documentation
 -------------
 
+
+
+Security Considerations
+-----------------------
+
+Please bear in mind that this is a WIP.
+
+The approach is to maintain data on CA certificates (and associated artifacts) to form unique certificate paths in support of certificate validation.
+
+While this implementation *does* perform signature verification of PKI artifacts, the associated cryptographic operations are not performed using a FIPS validated module.
+
+With this first commit, the implementation does accept a CRL URL for a proposed CAEntry, without downloading the CRL and verifying the signature.
 
 
 License
