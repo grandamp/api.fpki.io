@@ -1,6 +1,8 @@
 package io.fpki.api.function.utilities;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +17,8 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
 
 import com.amazonaws.util.Base64;
 
@@ -27,6 +31,30 @@ public class X509FunctionUtil {
 	 * Hidden Constructor
 	 */
 	private X509FunctionUtil() {
+	}
+
+	/**
+	 * 
+	 * @param entry
+	 * @return String
+	 * @throws IOException 
+	 */
+	public static String toPEM(CAEntry entry) throws IOException {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Subject=" + entry.caSubject + "\n");
+		sb.append("Issuer=" + entry.caIssuer + "\n");
+		sb.append("CRL=" + entry.caCrl + "\n");
+		sb.append("NotBefore=" + entry.caNotBefore + "\n");
+		sb.append("NotAfter=" + entry.caNotAfter + "\n");
+		byte[] certData = Base64.decode(entry.caCert);
+		PemObject certPem = new PemObject("CERTIFICATE", certData);
+		StringWriter sw = new StringWriter();
+		PemWriter writer = new PemWriter(sw);
+		writer.writeObject(certPem);
+		writer.flush();
+		writer.close();
+		sb.append(sw.getBuffer());
+		return sb.toString();
 	}
 
 	/**

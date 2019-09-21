@@ -17,38 +17,28 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.apigateway.ProxyRequest;
+import io.fpki.api.apigateway.ProxyResponse;
+import io.fpki.api.constants.APISettings;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
 import io.fpki.api.function.utilities.X509FunctionUtil;
-import io.fpki.api.pojo.ApiGatewayProxyRequest;
-import io.fpki.api.pojo.ApiGatewayProxyResponse;
 import io.fpki.api.pojo.CAEntry;
 
-public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequest, ApiGatewayProxyResponse> {
+public class CACreateEntryFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
 	private static final Logger log = Logger.getLogger(CACreateEntryFunction.class);
 
 	private static final DynamoDBCAEntry ddbEntry = DynamoDBCAEntry.instance();
 
-	/**
-	 * Field PEM_SIZE_LIMIT
-	 */
-	private final int PEM_SIZE_LIMIT = 8192;
-
-	/*
-	 * Install the BouncyCastle JCE Provider
-	 */
-	BouncyCastleProvider bc = new BouncyCastleProvider();
-
 	@Override
-	public ApiGatewayProxyResponse handleRequest(ApiGatewayProxyRequest request, Context arg1) {
+	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonString = null;
 		try {
@@ -61,19 +51,19 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 		try {
 			submittedEntry = CAEntry.getInstance(request.getBody());
 		} catch (IOException e) {
-			return new ApiGatewayProxyResponse(e.getMessage());
+			return new ProxyResponse(e.getMessage());
 		}
 		if (null == submittedEntry || null == submittedEntry.caCrl || null == submittedEntry.caCert) {
-			return new ApiGatewayProxyResponse("Request must include caCrl & caCert objects");
+			return new ProxyResponse("Request must include caCrl & caCert objects");
 		}
-		if (submittedEntry.caCert.length() >= PEM_SIZE_LIMIT) {
-			return new ApiGatewayProxyResponse("Size limit " + PEM_SIZE_LIMIT + "(bytes) exceeded for caCert object");
+		if (submittedEntry.caCert.length() >= APISettings.PEM_SIZE_LIMIT) {
+			return new ProxyResponse("Size limit " + APISettings.PEM_SIZE_LIMIT + "(bytes) exceeded for caCert object");
 		}
 		X509Certificate newCertificate = null;
 		try {
 			newCertificate = X509FunctionUtil.getCertificate(submittedEntry);
 		} catch (CertificateException | IllegalArgumentException e) {
-			return new ApiGatewayProxyResponse("Error decoding caCert: " + e.getMessage());
+			return new ProxyResponse("Error decoding caCert: " + e.getMessage());
 		}
 		/*
 		 * From here, we will build our DynamoDB CAEntry POJO
@@ -86,7 +76,7 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 		try {
 			caAKI = X509FunctionUtil.getAuthorityKeyIdentifier(newCertificate);
 		} catch (IllegalArgumentException e) {
-			return new ApiGatewayProxyResponse(e.getMessage());
+			return new ProxyResponse(e.getMessage());
 		}
 		newEntry.setCaAKI(caAKI);
 		/*
@@ -108,7 +98,7 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 			caCrl = crlUrl.toString();
 		} catch (MalformedURLException e) {
 			log.error("Malformed URL.", e);
-			return new ApiGatewayProxyResponse("Error processing caCrl URL: " + e.getMessage());
+			return new ProxyResponse("Error processing caCrl URL: " + e.getMessage());
 		}
 		newEntry.setCaCrl(caCrl);
 		/*
@@ -161,7 +151,7 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 				/*
 				 * Issuing CA not present, rejecting
 				 */
-				return new ApiGatewayProxyResponse("Issuing CA does not exist for this CA certificate");
+				return new ProxyResponse("Issuing CA does not exist for this CA certificate");
 			} else {
 				/*
 				 * Issuing CA present, validating signature
@@ -176,7 +166,7 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 					 * Invalid certificate, rejecting
 					 */
 					log.error("Validation using issuing CA failed", e);
-					return new ApiGatewayProxyResponse("Error validating certificate using issuer Public Key: " + e.getMessage());
+					return new ProxyResponse("Error validating certificate using issuer Public Key: " + e.getMessage());
 				}
 				/*
 				 * Adding new entry
@@ -188,7 +178,7 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
-				return new ApiGatewayProxyResponse(200, jsonString);
+				return new ProxyResponse(200, jsonString);
 			}
 		} else {
 			/*
@@ -200,7 +190,7 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 				/*
 				 * Certificate already exists, rejecting
 				 */
-				return new ApiGatewayProxyResponse("Entry already exists");
+				return new ProxyResponse("Entry already exists");
 			} else if (existingCertificate.getNotBefore().before(newCertificate.getNotBefore())) {
 				/*
 				 * Certificate has a newer issuance date, updating
@@ -212,13 +202,13 @@ public class CACreateEntryFunction implements RequestHandler<ApiGatewayProxyRequ
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
-				return new ApiGatewayProxyResponse(200, jsonString);
+				return new ProxyResponse(200, jsonString);
 			}
 			/*
 			 * If we get here, then we encountered a CA cert that is older, or possibly
 			 * re-issued without altering notBefore and notAfter.  Out of caution, reject. 
 			 */
-			return new ApiGatewayProxyResponse("Entry with more recent notBefore already exists");
+			return new ProxyResponse("Entry with more recent notBefore already exists");
 		}
 	}
 

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * This class is a Java representation of the CAEntry JSON object.
+ * This class is a Java representation of the nested CAEntry (CAEntryWithSubs) JSON object.
  * 
  * <pre>
  * {
@@ -27,14 +27,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 	"caSerial": "0130",
  * 	"caSKI": "AD0C7A755CE5F398C479980EAC28FD97F4E702FC",
  * 	"caSubject": "CN=Federal Common Policy CA,OU=FPKI,O=U.S. Government,C=US"
+ * 	"caSubordinates": [ { (CAEntryWithSubs Object) } ]
  * }
  * </pre>
  */
 @XmlRootElement
 @XmlType(propOrder = { "caAKI", "caCert", "caCrl", "caHash", "caIssuer", "caNotAfter", "caNotBefore", "caSerial",
-		"caSKI", "caSubject" })
+		"caSKI", "caSubject", "caSubordinates" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CAEntry {
+public class CAEntryWithSubs {
 
 	/**
 	 * Static creator for de-serialization
@@ -44,10 +45,10 @@ public class CAEntry {
 	 * @throws JsonParseException
 	 */
 	@JsonCreator
-	public static CAEntry getInstance(String jsonString) throws JsonParseException, JsonMappingException, IOException {
+	public static CAEntryWithSubs getInstance(String jsonString) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		CAEntry req = null;
-		req = mapper.readValue(jsonString, CAEntry.class);
+		CAEntryWithSubs req = null;
+		req = mapper.readValue(jsonString, CAEntryWithSubs.class);
 		return req;
 	}
 
@@ -64,13 +65,15 @@ public class CAEntry {
 	 * @param caSerial
 	 * @param caSKI
 	 * @param caSubject
+	 * @param caSubordinates
 	 */
 	@JsonCreator
-	public CAEntry(@JsonProperty("caAKI") String caAKI, @JsonProperty("caCert") String caCert,
+	public CAEntryWithSubs(@JsonProperty("caAKI") String caAKI, @JsonProperty("caCert") String caCert,
 			@JsonProperty("caCrl") String caCrl, @JsonProperty("caHash") String caHash,
 			@JsonProperty("caIssuer") String caIssuer, @JsonProperty("caNotAfter") String caNotAfter,
 			@JsonProperty("caNotBefore") String caNotBefore, @JsonProperty("caSerial") String caSerial,
-			@JsonProperty("caSKI") String caSKI, @JsonProperty("caSubject") String caSubject) {
+			@JsonProperty("caSKI") String caSKI, @JsonProperty("caSubject") String caSubject,
+			@JsonProperty("caSubordinates") CAEntryWithSubs caSubordinates) {
 		this.caAKI = caAKI;
 		this.caCert = caCert;
 		this.caCrl = caCrl;
@@ -81,6 +84,7 @@ public class CAEntry {
 		this.caSerial = caSerial;
 		this.caSKI = caSKI;
 		this.caSubject = caSubject;
+		this.caSubordinates = caSubordinates;
 	}
 
 	/**
@@ -142,5 +146,11 @@ public class CAEntry {
 	 */
 	@JsonProperty("caSubject")
 	public String caSubject;
+
+	/**
+	 * Field caSubordinates.
+	 */
+	@JsonProperty("caSubordinates")
+	public CAEntryWithSubs caSubordinates;
 
 }

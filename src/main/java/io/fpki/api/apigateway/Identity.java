@@ -1,4 +1,4 @@
-package io.fpki.api.pojo;
+package io.fpki.api.apigateway;
 
 /*
  * Per: https://willhamill.com/2016/12/12/aws-api-gateway-lambda-proxy-request-and-response-objects

@@ -10,19 +10,19 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.apigateway.ProxyRequest;
+import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
-import io.fpki.api.pojo.ApiGatewayProxyRequest;
-import io.fpki.api.pojo.ApiGatewayProxyResponse;
 
-public class CAGetBySKIFunction implements RequestHandler<ApiGatewayProxyRequest, ApiGatewayProxyResponse> {
+public class CAGetBySKIFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
 	private static final Logger log = Logger.getLogger(CAGetBySKIFunction.class);
 
 	private static final DynamoDBCAEntry ddbEntry = DynamoDBCAEntry.instance();
 
 	@Override
-	public ApiGatewayProxyResponse handleRequest(ApiGatewayProxyRequest request, Context arg1) {
+	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
 		/*
 		 * This request is received with PathParameters rather than a body.
 		 */
@@ -52,9 +52,9 @@ public class CAGetBySKIFunction implements RequestHandler<ApiGatewayProxyRequest
 			} catch (JsonProcessingException e) {
 				log.error("Error converting DynamoDBCAEntryPOJO to JSON", e);
 			}
-			return new ApiGatewayProxyResponse(200, jsonString);
+			return new ProxyResponse(200, jsonString);
 		} else {
-			return new ApiGatewayProxyResponse("caSKI must be the Hex value representing the SHA-1 digest of the CA's subjectPublicKeyInfo");
+			return new ProxyResponse("caSKI must be the Hex value representing the SHA-1 digest of the CA's subjectPublicKeyInfo");
 		}
 	}
 

@@ -70,3 +70,42 @@ Resources:
           Properties:
             Path: /ca
             Method: POST
+  CAPathGetAllFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'io.fpki.api.function.CAPathGetAllFunction::handleRequest'
+      Runtime: java8
+      Timeout: 15
+      MemorySize: 512
+      CodeUri: target/api.jar
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CATable
+        - DynamoDBReadPolicy:
+            TableName: fpki_trust_list
+      Events:
+        GetByQueryApi:
+          Type: Api
+          Properties:
+            Path: /caPath
+            Method: GET
+  CAPathGetBySKIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'io.fpki.api.function.CAPathGetBySKIFunction::handleRequest'
+      Runtime: java8
+      Timeout: 15
+      MemorySize: 512
+      CodeUri: target/api.jar
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CATable
+        - DynamoDBReadPolicy:
+            TableName: fpki_trust_list
+      Events:
+        GetByPathApi:
+          Type: Api
+          Properties:
+            Path: /caPath/{caSKI}
+            Method: GET
+            

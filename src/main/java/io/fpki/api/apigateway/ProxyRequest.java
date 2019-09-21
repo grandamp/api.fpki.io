@@ -1,4 +1,4 @@
-package io.fpki.api.pojo;
+package io.fpki.api.apigateway;
 
 import java.util.Map;
 
@@ -13,7 +13,7 @@ import java.util.Map;
  *     (I suspect a copy/paste error, as this is a response property of the example API in the docs)
  *   - input property contents is the top level object
  */
-public class ApiGatewayProxyRequest {
+public class ProxyRequest {
 
 	private String resource;
 	private String path;

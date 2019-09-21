@@ -9,19 +9,19 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.apigateway.ProxyRequest;
+import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
-import io.fpki.api.pojo.ApiGatewayProxyRequest;
-import io.fpki.api.pojo.ApiGatewayProxyResponse;
 
-public class CAGetAllFunction implements RequestHandler<ApiGatewayProxyRequest, ApiGatewayProxyResponse> {
+public class CAGetAllFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
 	private static final Logger log = Logger.getLogger(CAGetAllFunction.class);
 
 	private static final DynamoDBCAEntry ddbEntry = DynamoDBCAEntry.instance();
 
 	@Override
-	public ApiGatewayProxyResponse handleRequest(ApiGatewayProxyRequest request, Context arg1) {
+	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
 		/*
 		 * Request from API Gateway has no real use in this method.
 		 * The fact that we were called will cause us to return all entries.
@@ -44,7 +44,7 @@ public class CAGetAllFunction implements RequestHandler<ApiGatewayProxyRequest, 
 		} catch (JsonProcessingException e) {
 			log.error("Error converting DynamoDBCAEntryPOJO to JSON", e);
 		}
-		return new ApiGatewayProxyResponse(200, jsonString);
+		return new ProxyResponse(200, jsonString);
 	}
 
 }
