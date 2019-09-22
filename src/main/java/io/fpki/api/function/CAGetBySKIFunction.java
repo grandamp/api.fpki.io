@@ -45,16 +45,10 @@ public class CAGetBySKIFunction implements RequestHandler<ProxyRequest, ProxyRes
 			log.info("getCAsBySKIHandler invoked with caSKI = " + ski.getCaSKI());
 			List<DynamoDBCAEntryPOJO> ddbEntries = ddbEntry.getCA(ski.getCaSKI());
 			log.info("Found " + ddbEntries.size() + " entries for caSKI = " + ski.getCaSKI());
-			jsonString = null;
-			try {
-				jsonString = mapper.writeValueAsString(ddbEntries);
-				log.info(jsonString);
-			} catch (JsonProcessingException e) {
-				log.error("Error converting DynamoDBCAEntryPOJO to JSON", e);
-			}
-			return new ProxyResponse(200, jsonString);
+			return new ProxyResponse(200, ddbEntries.get(0).toString());
 		} else {
-			return new ProxyResponse("caSKI must be the Hex value representing the SHA-1 digest of the CA's subjectPublicKeyInfo");
+			return new ProxyResponse(
+					"caSKI must be the Hex value representing the SHA-1 digest of the CA's subjectPublicKeyInfo");
 		}
 	}
 

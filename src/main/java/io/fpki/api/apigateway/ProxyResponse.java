@@ -1,16 +1,14 @@
 package io.fpki.api.apigateway;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
+import io.fpki.api.pojo.CAEntryWithSubs;
 
 /*
  * Per: https://willhamill.com/2016/12/12/aws-api-gateway-lambda-proxy-request-and-response-objects
@@ -44,7 +42,7 @@ public class ProxyResponse {
 		this.headers = headers;
 	}
 
-	public String getBody() throws JsonParseException, JsonMappingException, IOException {
+	public String getBody() {
 		return this.body;
 	}
 
@@ -72,6 +70,15 @@ public class ProxyResponse {
 		headers = new HashMap<String, String>();
 		headers.put("Content-Type", "application/json");
 		this.body = body;
+	}
+
+	public ProxyResponse(int i, CAEntryWithSubs entry) {
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			this.body = mapper.writeValueAsString(entry);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

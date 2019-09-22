@@ -9,11 +9,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * This class is a Java representation of the nested CAEntry (CAEntryWithSubs) JSON object.
+ * This class is a Java representation of the nested CAEntry (CAEntryWithSubs)
+ * JSON object.
  * 
  * <pre>
  * {
@@ -45,7 +47,8 @@ public class CAEntryWithSubs {
 	 * @throws JsonParseException
 	 */
 	@JsonCreator
-	public static CAEntryWithSubs getInstance(String jsonString) throws JsonParseException, JsonMappingException, IOException {
+	public static CAEntryWithSubs getInstance(String jsonString)
+			throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		CAEntryWithSubs req = null;
 		req = mapper.readValue(jsonString, CAEntryWithSubs.class);
@@ -73,7 +76,7 @@ public class CAEntryWithSubs {
 			@JsonProperty("caIssuer") String caIssuer, @JsonProperty("caNotAfter") String caNotAfter,
 			@JsonProperty("caNotBefore") String caNotBefore, @JsonProperty("caSerial") String caSerial,
 			@JsonProperty("caSKI") String caSKI, @JsonProperty("caSubject") String caSubject,
-			@JsonProperty("caSubordinates") CAEntryWithSubs caSubordinates) {
+			@JsonProperty("caSubordinates") CAEntryWithSubs[] caSubordinates) {
 		this.caAKI = caAKI;
 		this.caCert = caCert;
 		this.caCrl = caCrl;
@@ -85,6 +88,36 @@ public class CAEntryWithSubs {
 		this.caSKI = caSKI;
 		this.caSubject = caSubject;
 		this.caSubordinates = caSubordinates;
+	}
+
+	@Override
+	public String toString() {
+		JsonStringEncoder e = JsonStringEncoder.getInstance();
+		StringBuffer sb = new StringBuffer();
+		sb.append("{");
+		sb.append("\"caAKI\":\"" + new String(e.quoteAsUTF8(caAKI)) + "\",");
+		sb.append("\"caCert\":\"" + new String(e.quoteAsUTF8(caCert)) + "\",");
+		sb.append("\"caCrl\":\"" + new String(e.quoteAsUTF8(caCrl)) + "\",");
+		sb.append("\"caHash\":\"" + new String(e.quoteAsUTF8(caHash)) + "\",");
+		sb.append("\"caIssuer\":\"" + new String(e.quoteAsUTF8(caIssuer)) + "\",");
+		sb.append("\"caNotAfter\":\"" + new String(e.quoteAsUTF8(caNotAfter)) + "\",");
+		sb.append("\"caNotBefore\":\"" + new String(e.quoteAsUTF8(caNotBefore)) + "\",");
+		sb.append("\"caSerial\":\"" + new String(e.quoteAsUTF8(caSerial)) + "\",");
+		sb.append("\"caSKI\":\"" + new String(e.quoteAsUTF8(caSKI)) + "\",");
+		sb.append("\"caSubject\":\"" + new String(e.quoteAsUTF8(caSubject)) + "\"");
+		if (null != caSubordinates) {
+			sb.append(",");
+			sb.append("\"caSubordinates\":[");
+			for (int i = 0; i < caSubordinates.length; i++) {
+				sb.append(caSubordinates[i].toString());
+				if (i < caSubordinates.length - 1) {
+					sb.append(",");
+				}
+			}
+			sb.append("]");
+		}
+		sb.append("}");
+		return sb.toString();
 	}
 
 	/**
@@ -151,6 +184,6 @@ public class CAEntryWithSubs {
 	 * Field caSubordinates.
 	 */
 	@JsonProperty("caSubordinates")
-	public CAEntryWithSubs caSubordinates;
+	public CAEntryWithSubs[] caSubordinates;
 
 }
