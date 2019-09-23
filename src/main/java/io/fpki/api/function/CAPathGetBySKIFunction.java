@@ -7,14 +7,15 @@ import org.apache.log4j.Logger;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
+import io.fpki.api.apigateway.ProxyResponseOk;
+import io.fpki.api.apigateway.ProxyResponseServerError;
 import io.fpki.api.constants.TrustAnchor;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
+import io.fpki.api.function.utilities.POJOFunctionUtil;
 import io.fpki.api.pojo.CAEntryWithSubs;
 
 public class CAPathGetBySKIFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
@@ -27,35 +28,28 @@ public class CAPathGetBySKIFunction implements RequestHandler<ProxyRequest, Prox
 	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
 		/*
 		 * This request is received with PathParameters rather than a body.
-		 */
-		ObjectMapper mapper = new ObjectMapper();
-		String jsonString = null;
-		try {
-			jsonString = mapper.writeValueAsString(request);
-			log.info(jsonString);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-		/*
+		 * 
+		 * 
 		 * This handler makes use of simple recursion to obtain a specific path,
 		 * performing an AKI chase, like an AIA chase.
 		 * 
 		 * - First, get the subject certificate identified from the
 		 * "/ca/{caSKI}" handler
 		 */
+		log.info(POJOFunctionUtil.pojoToString(request));
 		CAGetBySKIFunction getBySki = new CAGetBySKIFunction();
 		ProxyResponse skiResponse = getBySki.handleRequest(request, arg1);
-		String jsonBody = skiResponse.getBody();
-		if (null != jsonBody) {
+		if (skiResponse.getStatusCode() == 200) {
+			String jsonBody = skiResponse.getBody();
 			CAEntryWithSubs currentEntry = null;
 			try {
 				currentEntry = CAEntryWithSubs.getInstance(jsonBody);
 			} catch (IOException e) {
 				log.error(e);
-				return new ProxyResponse("Inconsistency or encoding error in data storage");
+				return new ProxyResponseServerError("Inconsistency or encoding error in data storage");
 			}
 			if (currentEntry.caAKI.equalsIgnoreCase(TrustAnchor.getTrustAnchor().caAKI)) {
-				return new ProxyResponse(200, currentEntry);
+				return new ProxyResponseOk(currentEntry.toString(), "application/json");
 			} else {
 				/*
 				 * - Next, find the issuing CA from this entries AKI, and set it
@@ -65,14 +59,13 @@ public class CAPathGetBySKIFunction implements RequestHandler<ProxyRequest, Prox
 				while (!currentEntry.caAKI.equalsIgnoreCase(TrustAnchor.getTrustAnchor().caAKI)) {
 					currentEntry = getIssuerAndAppendAsSub(currentEntry);
 					if (null == currentEntry) {
-						return new ProxyResponse("Inconsistency or encoding error in data storage");
+						return new ProxyResponseServerError("Inconsistency or encoding error in data storage");
 					}
 				}
-				return new ProxyResponse(200, currentEntry.toString());
+				return new ProxyResponseOk(currentEntry.toString(), "application/json");
 			}
 		} else {
-			return new ProxyResponse(
-					"caSKI must be the Hex value representing the SHA-1 digest of the CA's subjectPublicKeyInfo");
+			return skiResponse;
 		}
 	}
 

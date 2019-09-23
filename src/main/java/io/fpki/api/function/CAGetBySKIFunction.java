@@ -7,13 +7,15 @@ import org.apache.log4j.Logger;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
+import io.fpki.api.apigateway.ProxyResponseNotFound;
+import io.fpki.api.apigateway.ProxyResponseOk;
+import io.fpki.api.apigateway.ProxyResponseServerError;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
+import io.fpki.api.function.utilities.POJOFunctionUtil;
 
 public class CAGetBySKIFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
@@ -26,14 +28,7 @@ public class CAGetBySKIFunction implements RequestHandler<ProxyRequest, ProxyRes
 		/*
 		 * This request is received with PathParameters rather than a body.
 		 */
-		ObjectMapper mapper = new ObjectMapper();
-		String jsonString = null;
-		try {
-			jsonString = mapper.writeValueAsString(request);
-			log.info(jsonString);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+		log.info(POJOFunctionUtil.pojoToString(request));
 		Map<String, String> pathParams = request.getPathParameters();
 		String querySKI = null;
 		if (null != pathParams.get("caSKI")) {
@@ -44,12 +39,14 @@ public class CAGetBySKIFunction implements RequestHandler<ProxyRequest, ProxyRes
 			ski.setCaSKI(querySKI);
 			log.info("getCAsBySKIHandler invoked with caSKI = " + ski.getCaSKI());
 			List<DynamoDBCAEntryPOJO> ddbEntries = ddbEntry.getCA(ski.getCaSKI());
-			log.info("Found " + ddbEntries.size() + " entries for caSKI = " + ski.getCaSKI());
-			return new ProxyResponse(200, ddbEntries.get(0).toString());
+			if (ddbEntries.size() == 0) {
+				return new ProxyResponseNotFound();
+			} else {
+				return new ProxyResponseOk(ddbEntries.get(0).toString(), "application/json");
+			}
 		} else {
-			return new ProxyResponse(
+			return new ProxyResponseServerError(
 					"caSKI must be the Hex value representing the SHA-1 digest of the CA's subjectPublicKeyInfo");
 		}
 	}
-
 }

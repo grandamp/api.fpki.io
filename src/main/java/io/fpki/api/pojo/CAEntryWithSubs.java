@@ -1,6 +1,8 @@
 package io.fpki.api.pojo;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -118,6 +120,44 @@ public class CAEntryWithSubs {
 		}
 		sb.append("}");
 		return sb.toString();
+	}
+
+	/**
+	 * 
+	 * @param entry
+	 * @return
+	 */
+	public boolean addSubordinate(CAEntryWithSubs entry) {
+		if (isSubordinate(entry)) {
+			List<CAEntryWithSubs> list = new ArrayList<CAEntryWithSubs>();
+			if (null != caSubordinates) {
+				for (CAEntryWithSubs currentEntry: caSubordinates) {
+					list.add(currentEntry);
+				}
+			}
+			list.add(entry);
+			caSubordinates = list.toArray(new CAEntryWithSubs[list.size()]);
+			return true;
+		} else {
+			if (null != caSubordinates) {
+				for (CAEntryWithSubs currentEntry: caSubordinates) {
+					if (currentEntry.addSubordinate(entry)) {
+						return true;
+					}
+				}
+				return false;
+			}
+			return false;
+		}
+	}
+
+	/**
+	 * 
+	 * @param entry
+	 * @return
+	 */
+	private boolean isSubordinate(CAEntryWithSubs entry) {
+		return entry.caAKI.equalsIgnoreCase(caSKI);
 	}
 
 	/**

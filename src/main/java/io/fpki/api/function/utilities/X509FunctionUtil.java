@@ -24,6 +24,7 @@ import com.amazonaws.util.Base64;
 
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
 import io.fpki.api.pojo.CAEntry;
+import io.fpki.api.pojo.CAEntryWithSubs;
 
 public class X509FunctionUtil {
 
@@ -39,7 +40,7 @@ public class X509FunctionUtil {
 	 * @return String
 	 * @throws IOException 
 	 */
-	public static String toPEM(CAEntry entry) throws IOException {
+	public static String toPEM(CAEntryWithSubs entry) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Subject=" + entry.caSubject + "\n");
 		sb.append("Issuer=" + entry.caIssuer + "\n");
@@ -50,10 +51,31 @@ public class X509FunctionUtil {
 		PemObject certPem = new PemObject("CERTIFICATE", certData);
 		StringWriter sw = new StringWriter();
 		PemWriter writer = new PemWriter(sw);
-		writer.writeObject(certPem);
-		writer.flush();
-		writer.close();
+		try {
+			writer.writeObject(certPem);
+			writer.flush();
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		sb.append(sw.getBuffer());
+		return sb.toString();
+	}
+
+	public static String getCAEntryWithSubsAsPEM(CAEntryWithSubs entry) {
+		StringBuffer sb = new StringBuffer();
+		/*
+		 * Get the root entry
+		 */
+		sb.append(toPEM(entry));
+		/*
+		 * Get all of the root Entries subordinates by calling ourselves.
+		 */
+		if (null != entry.caSubordinates) {
+			for (CAEntryWithSubs currentSub : entry.caSubordinates) {
+				sb.append(getCAEntryWithSubsAsPEM(currentSub));
+			}
+		}
 		return sb.toString();
 	}
 
