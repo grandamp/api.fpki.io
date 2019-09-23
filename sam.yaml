@@ -18,8 +18,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CAGetAllFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBReadPolicy:
@@ -37,8 +37,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CAGetBySKIFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBReadPolicy:
@@ -56,8 +56,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CACreateEntryFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBCrudPolicy:
@@ -75,8 +75,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CAPathGetAllFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBReadPolicy:
@@ -94,8 +94,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CAPathGetBySKIFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBReadPolicy:
@@ -113,8 +113,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CAPathAsPEMGetAllFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBReadPolicy:
@@ -132,8 +132,8 @@ Resources:
     Properties:
       Handler: 'io.fpki.api.function.CAPathAsPEMGetBySKIFunction::handleRequest'
       Runtime: java8
-      Timeout: 15
-      MemorySize: 128
+      Timeout: 30
+      MemorySize: 512
       CodeUri: target/api.jar
       Policies:
         - DynamoDBReadPolicy:
