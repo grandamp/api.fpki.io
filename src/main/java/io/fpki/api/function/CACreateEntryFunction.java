@@ -10,6 +10,8 @@ import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -91,6 +93,24 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 			e.printStackTrace();
 		}
 		newEntry.setCaCert(caCert);
+		/*
+		 * Before we proceed, we should do the obvious:
+		 *   - check temporal validity,and;
+		 *   - see *if* this is really a CA certificate.
+		 *   
+		 * Basic logic would be to check out Basic Constraints, and check to
+		 * see if CA=True
+		 */
+		try {
+			newCertificate.checkValidity();
+		} catch (CertificateExpiredException e) {
+			return new ProxyResponseServerError("The certificate submitted is expired");
+		} catch (CertificateNotYetValidException e) {
+			return new ProxyResponseServerError("The certificate submitted is not yet valid");
+		}
+		if (!X509FunctionUtil.isCA(newCertificate)) {
+			return new ProxyResponseServerError("The certificate submitted is not a CA certificate");
+		}
 		/*
 		 * @param caCrl
 		 */

@@ -15,6 +15,7 @@ import java.util.Locale;
 
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -120,6 +121,24 @@ public class X509FunctionUtil {
 			e.printStackTrace();
 		}
 		return cert;
+	}
+
+	/**
+	 * 
+	 * @param cert
+	 * @return
+	 */
+	public static boolean isCA(X509Certificate cert) {
+		byte[] bcExtValue = cert.getExtensionValue(Extension.basicConstraints.getId());
+		if (null != bcExtValue) {
+			byte[] bcValue = ASN1OctetString.getInstance(bcExtValue).getOctets();
+			BasicConstraints bc = BasicConstraints.getInstance(bcValue);
+			return bc.isCA();
+		}
+		/*
+		 * basicConstraints extension not present, so, not a CA
+		 */
+		return false;
 	}
 
 	/**
