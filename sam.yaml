@@ -24,8 +24,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByQueryApi:
           Type: Api
@@ -43,8 +41,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByPathApi:
           Type: Api
@@ -62,8 +58,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByPathApi:
           Type: Api
@@ -81,8 +75,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByQueryApi:
           Type: Api
@@ -100,8 +92,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByPathApi:
           Type: Api
@@ -119,8 +109,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByQueryApi:
           Type: Api
@@ -138,8 +126,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CATable
-        - DynamoDBReadPolicy:
-            TableName: fpki_trust_list
       Events:
         GetByPathApi:
           Type: Api
