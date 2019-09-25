@@ -15,6 +15,8 @@ import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.constants.POJOObjectMapper;
+
 /**
  * This class is a Java representation of the nested CAEntry (CAEntryWithSubs)
  * JSON object.
@@ -51,7 +53,7 @@ public class CAEntryWithSubs {
 	@JsonCreator
 	public static CAEntryWithSubs getInstance(String jsonString)
 			throws JsonParseException, JsonMappingException, IOException {
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 		CAEntryWithSubs req = null;
 		req = mapper.readValue(jsonString, CAEntryWithSubs.class);
 		return req;

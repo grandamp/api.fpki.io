@@ -30,6 +30,7 @@ import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.apigateway.ProxyResponseOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
 import io.fpki.api.constants.APISettings;
+import io.fpki.api.constants.POJOObjectMapper;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
 import io.fpki.api.function.utilities.X509FunctionUtil;
@@ -43,7 +44,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 
 	@Override
 	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 		String jsonString = null;
 		try {
 			jsonString = mapper.writeValueAsString(request);

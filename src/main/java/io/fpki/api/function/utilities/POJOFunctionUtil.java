@@ -3,6 +3,8 @@ package io.fpki.api.function.utilities;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.constants.POJOObjectMapper;
+
 public class POJOFunctionUtil {
 
 	/*
@@ -11,7 +13,7 @@ public class POJOFunctionUtil {
 	private POJOFunctionUtil() {}
 
 	public static String pojoToString(Object obj) {
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 		String jsonString = null;
 		try {
 			jsonString = mapper.writeValueAsString(obj);

@@ -13,6 +13,8 @@ import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.constants.POJOObjectMapper;
+
 /**
  * This class is a Java representation of the CAEntry JSON object.
  * 
@@ -46,7 +48,7 @@ public class CAEntry {
 	 */
 	@JsonCreator
 	public static CAEntry getInstance(String jsonString) throws JsonParseException, JsonMappingException, IOException {
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 		CAEntry req = null;
 		req = mapper.readValue(jsonString, CAEntry.class);
 		return req;

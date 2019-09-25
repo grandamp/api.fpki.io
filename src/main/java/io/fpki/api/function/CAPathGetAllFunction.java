@@ -14,6 +14,7 @@ import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.apigateway.ProxyResponseOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
+import io.fpki.api.constants.POJOObjectMapper;
 import io.fpki.api.constants.TrustAnchor;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
 import io.fpki.api.pojo.CAEntryWithSubs;
@@ -39,7 +40,7 @@ public class CAPathGetAllFunction implements RequestHandler<ProxyRequest, ProxyR
 		if (allResponse.getStatusCode() == 200) {
 			String jsonBody = allResponse.getBody();
 			CAEntryWithSubs[] entries = null;
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 			try {
 				entries = mapper.readValue(jsonBody, CAEntryWithSubs[].class);
 			} catch (IOException e) {

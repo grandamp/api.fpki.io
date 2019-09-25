@@ -6,6 +6,8 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.fpki.api.constants.POJOObjectMapper;
+
 public class ProxyResponseServerError extends ProxyResponse {
 
 	public ProxyResponseServerError(String errorMessage) {
@@ -14,7 +16,7 @@ public class ProxyResponseServerError extends ProxyResponse {
 		this.headers.put("Content-Type", "application/json");
 		Map<String, String> error = new HashMap<>();
 		error.put("message", errorMessage);
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 		try {
 			this.body = mapper.writeValueAsString(error);
 		} catch (JsonProcessingException e) {
