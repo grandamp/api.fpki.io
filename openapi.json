@@ -2,6 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "api.fpki.io",
+    "description": "**This is a rest web service that maintains the paths of X.509 CA Certificates within the [U.S. Federal PKI](https://fpki.idmanagement.gov).**\n\nThis documentation is provided via the OpenAPI Specification in [JSON](https://raw.githubusercontent.com/grandamp/api.fpki.io/master/openapi.json) and [YAML](https://raw.githubusercontent.com/grandamp/api.fpki.io/master/openapi.yaml).\n\nThe source code of this API is located in [this GitHub repo](https://github.com/grandamp/api.fpki.io).\n",
     "version": "1.0"
   },
   "servers": [
@@ -21,6 +22,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/arrayOfEntity"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
                 }
               }
             }
@@ -51,6 +62,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
           }
         }
       }
@@ -73,9 +104,29 @@
           "200": {
             "description": "response",
             "content": {
-              "application/ocsp-response": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/entity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
                 }
               }
             }
@@ -91,9 +142,19 @@
           "200": {
             "description": "response",
             "content": {
-              "application/ocsp-response": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/nestedEntity"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
                 }
               }
             }
@@ -119,9 +180,29 @@
           "200": {
             "description": "response",
             "content": {
-              "application/ocsp-response": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/nestedEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
                 }
               }
             }
@@ -140,6 +221,16 @@
               "text/plain": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
                 }
               }
             }
@@ -168,6 +259,26 @@
               "text/plain": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
                 }
               }
             }
@@ -337,6 +448,18 @@
                 }
               }
             }
+          }
+        }
+      },
+      "error": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "A brief description of the error"
           }
         }
       }
