@@ -2,6 +2,7 @@ package io.fpki.api.constants;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class POJOObjectMapper {
@@ -13,8 +14,8 @@ public class POJOObjectMapper {
 	private static ObjectMapper mapper;
 
 	private POJOObjectMapper() {
-		log.info("Creating DynamoDBManager Instance");
-		mapper = new ObjectMapper();
+		log.info("Creating POJOObjectMapper Instance");
+		mapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL);
 	}
 
 	public static POJOObjectMapper instance() {
@@ -27,7 +28,7 @@ public class POJOObjectMapper {
 		return instance;
 	}
 
-	public ObjectMapper mapper() {
+	public ObjectMapper getMapper() {
 		return mapper;
 	}
 

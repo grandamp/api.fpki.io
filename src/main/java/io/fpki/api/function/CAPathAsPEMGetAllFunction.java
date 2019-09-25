@@ -6,11 +6,13 @@ import org.apache.log4j.Logger;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.apigateway.ProxyResponseOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
+import io.fpki.api.constants.POJOObjectMapper;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
 import io.fpki.api.function.utilities.X509FunctionUtil;
 import io.fpki.api.pojo.CAEntryWithSubs;
@@ -18,6 +20,8 @@ import io.fpki.api.pojo.CAEntryWithSubs;
 public class CAPathAsPEMGetAllFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
 	private static final Logger log = Logger.getLogger(CAPathAsPEMGetAllFunction.class);
+
+	private static final POJOObjectMapper mapper = POJOObjectMapper.instance();
 
 	@Override
 	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
@@ -36,7 +40,14 @@ public class CAPathAsPEMGetAllFunction implements RequestHandler<ProxyRequest, P
 			log.error(e);
 			return new ProxyResponseServerError(e.getMessage());
 		}
-		return new ProxyResponseOk(X509FunctionUtil.getCAEntryWithSubsAsPEM(entry), "text/plain");
+		ProxyResponseOk ok = new ProxyResponseOk(X509FunctionUtil.getCAEntryWithSubsAsPEM(entry), "text/plain");
+		try {
+			log.info(mapper.getMapper().writeValueAsString(ok));
+		} catch (JsonProcessingException e) {
+			log.error(e);
+		}
+		return ok;
 	}
+	
 
 }

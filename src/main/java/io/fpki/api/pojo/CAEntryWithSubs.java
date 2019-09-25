@@ -53,7 +53,7 @@ public class CAEntryWithSubs {
 	@JsonCreator
 	public static CAEntryWithSubs getInstance(String jsonString)
 			throws JsonParseException, JsonMappingException, IOException {
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
 		CAEntryWithSubs req = null;
 		req = mapper.readValue(jsonString, CAEntryWithSubs.class);
 		return req;
@@ -100,7 +100,7 @@ public class CAEntryWithSubs {
 	 */
 	@Override
 	public String toString() {
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
 		try {
 			return mapper.writeValueAsString(this);
 		} catch (JsonProcessingException e) {

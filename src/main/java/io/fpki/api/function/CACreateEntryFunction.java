@@ -23,7 +23,6 @@ import org.apache.log4j.Logger;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
@@ -40,14 +39,15 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 
 	private static final Logger log = Logger.getLogger(CACreateEntryFunction.class);
 
+	private static final POJOObjectMapper mapper = POJOObjectMapper.instance();
+
 	private static final DynamoDBCAEntry ddbEntry = DynamoDBCAEntry.instance();
 
 	@Override
 	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 		String jsonString = null;
 		try {
-			jsonString = mapper.writeValueAsString(request);
+			jsonString = mapper.getMapper().writeValueAsString(request);
 			log.info(jsonString);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -197,7 +197,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				ddbEntry.createCA(newEntry);
 				jsonString = null;
 				try {
-					jsonString = mapper.writeValueAsString(newEntry);
+					jsonString = mapper.getMapper().writeValueAsString(newEntry);
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
@@ -221,7 +221,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				ddbEntry.createCA(newEntry);
 				jsonString = null;
 				try {
-					jsonString = mapper.writeValueAsString(newEntry);
+					jsonString = mapper.getMapper().writeValueAsString(newEntry);
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}

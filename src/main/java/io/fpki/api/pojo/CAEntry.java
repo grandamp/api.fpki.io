@@ -48,7 +48,7 @@ public class CAEntry {
 	 */
 	@JsonCreator
 	public static CAEntry getInstance(String jsonString) throws JsonParseException, JsonMappingException, IOException {
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
 		CAEntry req = null;
 		req = mapper.readValue(jsonString, CAEntry.class);
 		return req;
@@ -92,7 +92,7 @@ public class CAEntry {
 	 */
 	@Override
 	public String toString() {
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
 		try {
 			return mapper.writeValueAsString(this);
 		} catch (JsonProcessingException e) {

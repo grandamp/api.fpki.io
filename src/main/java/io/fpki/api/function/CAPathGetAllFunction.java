@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
@@ -22,6 +21,8 @@ import io.fpki.api.pojo.CAEntryWithSubs;
 public class CAPathGetAllFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
 	private static final Logger log = Logger.getLogger(CAPathGetAllFunction.class);
+
+	private static final POJOObjectMapper mapper = POJOObjectMapper.instance();
 
 	private static CAEntryWithSubs trustAnchor;
 
@@ -40,9 +41,8 @@ public class CAPathGetAllFunction implements RequestHandler<ProxyRequest, ProxyR
 		if (allResponse.getStatusCode() == 200) {
 			String jsonBody = allResponse.getBody();
 			CAEntryWithSubs[] entries = null;
-			ObjectMapper mapper = POJOObjectMapper.instance().mapper();
 			try {
-				entries = mapper.readValue(jsonBody, CAEntryWithSubs[].class);
+				entries = mapper.getMapper().readValue(jsonBody, CAEntryWithSubs[].class);
 			} catch (IOException e) {
 				log.error(e);
 				return new ProxyResponseServerError("error serializing data from /ca endpoint");

@@ -13,7 +13,7 @@ public class POJOFunctionUtil {
 	private POJOFunctionUtil() {}
 
 	public static String pojoToString(Object obj) {
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
 		String jsonString = null;
 		try {
 			jsonString = mapper.writeValueAsString(obj);

@@ -16,7 +16,7 @@ public class ProxyResponseServerError extends ProxyResponse {
 		this.headers.put("Content-Type", "application/json");
 		Map<String, String> error = new HashMap<>();
 		error.put("message", errorMessage);
-		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
 		try {
 			this.body = mapper.writeValueAsString(error);
 		} catch (JsonProcessingException e) {
