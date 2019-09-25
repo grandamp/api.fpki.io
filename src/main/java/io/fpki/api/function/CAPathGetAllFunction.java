@@ -11,10 +11,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
-import io.fpki.api.apigateway.ProxyResponseOk;
+import io.fpki.api.apigateway.ProxyResponseJSONOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
+import io.fpki.api.constants.APISettings;
 import io.fpki.api.constants.POJOObjectMapper;
-import io.fpki.api.constants.TrustAnchor;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
 import io.fpki.api.pojo.CAEntryWithSubs;
 
@@ -49,7 +49,7 @@ public class CAPathGetAllFunction implements RequestHandler<ProxyRequest, ProxyR
 			}
 			List<CAEntryWithSubs> entryList = new CopyOnWriteArrayList<CAEntryWithSubs>();
 			for (CAEntryWithSubs entry : entries) {
-				if (!entry.caSKI.equalsIgnoreCase(TrustAnchor.getTrustAnchor().caSKI)) {
+				if (!entry.caSKI.equalsIgnoreCase(APISettings.instance().getTrustAnchor().caSKI)) {
 					entryList.add(entry);
 				} else {
 					trustAnchor = entry;
@@ -58,7 +58,7 @@ public class CAPathGetAllFunction implements RequestHandler<ProxyRequest, ProxyR
 			while (entryList.size() != 0) {
 				entryList = findSubordinates(entryList);
 			}
-			return new ProxyResponseOk(trustAnchor.toString(), "application/json");
+			return new ProxyResponseJSONOk(trustAnchor.toString());
 		} else {
 			return allResponse;
 		}

@@ -10,8 +10,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
-import io.fpki.api.apigateway.ProxyResponseOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
+import io.fpki.api.apigateway.ProxyResponseTextOk;
 import io.fpki.api.constants.POJOObjectMapper;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
 import io.fpki.api.function.utilities.X509FunctionUtil;
@@ -40,7 +40,7 @@ public class CAPathAsPEMGetAllFunction implements RequestHandler<ProxyRequest, P
 			log.error(e);
 			return new ProxyResponseServerError(e.getMessage());
 		}
-		ProxyResponseOk ok = new ProxyResponseOk(X509FunctionUtil.getCAEntryWithSubsAsPEM(entry), "text/plain");
+		ProxyResponseTextOk ok = new ProxyResponseTextOk(X509FunctionUtil.getCAEntryWithSubsAsPEM(entry));
 		try {
 			log.info(mapper.getMapper().writeValueAsString(ok));
 		} catch (JsonProcessingException e) {

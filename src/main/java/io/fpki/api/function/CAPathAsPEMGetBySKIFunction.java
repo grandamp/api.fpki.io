@@ -9,8 +9,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
-import io.fpki.api.apigateway.ProxyResponseOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
+import io.fpki.api.apigateway.ProxyResponseTextOk;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
 import io.fpki.api.function.utilities.X509FunctionUtil;
 import io.fpki.api.pojo.CAEntryWithSubs;
@@ -41,7 +41,7 @@ public class CAPathAsPEMGetBySKIFunction implements RequestHandler<ProxyRequest,
 				log.error(e);
 				return new ProxyResponseServerError("Inconsistency or encoding error in data storage");
 			}
-			return new ProxyResponseOk(X509FunctionUtil.getCAEntryWithSubsAsPEM(currentEntry), "text/plain");
+			return new ProxyResponseTextOk(X509FunctionUtil.getCAEntryWithSubsAsPEM(currentEntry));
 		} else {
 			return skiResponse;
 		}

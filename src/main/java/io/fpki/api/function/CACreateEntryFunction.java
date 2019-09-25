@@ -26,7 +26,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
-import io.fpki.api.apigateway.ProxyResponseOk;
+import io.fpki.api.apigateway.ProxyResponseBadRequest;
+import io.fpki.api.apigateway.ProxyResponseJSONOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
 import io.fpki.api.constants.APISettings;
 import io.fpki.api.constants.POJOObjectMapper;
@@ -56,19 +57,19 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 		try {
 			submittedEntry = CAEntry.getInstance(request.getBody());
 		} catch (IOException e) {
-			return new ProxyResponseServerError(e.getMessage());
+			return new ProxyResponseBadRequest(e.getMessage());
 		}
 		if (null == submittedEntry || null == submittedEntry.caCrl || null == submittedEntry.caCert) {
-			return new ProxyResponseServerError("Request must include caCrl & caCert objects");
+			return new ProxyResponseBadRequest("Request must include caCrl & caCert objects");
 		}
-		if (submittedEntry.caCert.length() >= APISettings.PEM_SIZE_LIMIT) {
-			return new ProxyResponseServerError("Size limit " + APISettings.PEM_SIZE_LIMIT + "(bytes) exceeded for caCert object");
+		if (submittedEntry.caCert.length() >= APISettings.instance().getPEMSizeLimit()) {
+			return new ProxyResponseBadRequest("Size limit " + APISettings.instance().getPEMSizeLimit() + "(bytes) exceeded for caCert object");
 		}
 		X509Certificate newCertificate = null;
 		try {
 			newCertificate = X509FunctionUtil.getCertificate(submittedEntry);
 		} catch (CertificateException | IllegalArgumentException e) {
-			return new ProxyResponseServerError("Error decoding caCert: " + e.getMessage());
+			return new ProxyResponseBadRequest("Error decoding caCert: " + e.getMessage());
 		}
 		/*
 		 * From here, we will build our DynamoDB CAEntry POJO
@@ -105,12 +106,12 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 		try {
 			newCertificate.checkValidity();
 		} catch (CertificateExpiredException e) {
-			return new ProxyResponseServerError("The certificate submitted is expired");
+			return new ProxyResponseBadRequest("The certificate submitted is expired");
 		} catch (CertificateNotYetValidException e) {
-			return new ProxyResponseServerError("The certificate submitted is not yet valid");
+			return new ProxyResponseBadRequest("The certificate submitted is not yet valid");
 		}
 		if (!X509FunctionUtil.isCA(newCertificate)) {
-			return new ProxyResponseServerError("The certificate submitted is not a CA certificate");
+			return new ProxyResponseBadRequest("The certificate submitted is not a CA certificate");
 		}
 		/*
 		 * @param caCrl
@@ -121,7 +122,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 			caCrl = crlUrl.toString();
 		} catch (MalformedURLException e) {
 			log.error("Malformed URL.", e);
-			return new ProxyResponseServerError("Error processing caCrl URL: " + e.getMessage());
+			return new ProxyResponseBadRequest("Error processing caCrl URL: " + e.getMessage());
 		}
 		newEntry.setCaCrl(caCrl);
 		/*
@@ -174,7 +175,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				/*
 				 * Issuing CA not present, rejecting
 				 */
-				return new ProxyResponseServerError("Issuing CA does not exist for this CA certificate");
+				return new ProxyResponseBadRequest("Issuing CA does not exist for this CA certificate");
 			} else {
 				/*
 				 * Issuing CA present, validating signature
@@ -189,7 +190,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 					 * Invalid certificate, rejecting
 					 */
 					log.error("Validation using issuing CA failed", e);
-					return new ProxyResponseServerError("Error validating certificate using issuer Public Key: " + e.getMessage());
+					return new ProxyResponseBadRequest("Error validating certificate using issuer Public Key: " + e.getMessage());
 				}
 				/*
 				 * Adding new entry
@@ -201,7 +202,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
-				return new ProxyResponseOk(jsonString, "application/json");
+				return new ProxyResponseJSONOk(jsonString);
 			}
 		} else {
 			/*
@@ -213,7 +214,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				/*
 				 * Certificate already exists, rejecting
 				 */
-				return new ProxyResponseServerError("Entry already exists");
+				return new ProxyResponseBadRequest("Entry already exists");
 			} else if (existingCertificate.getNotBefore().before(newCertificate.getNotBefore())) {
 				/*
 				 * Certificate has a newer issuance date, updating
@@ -225,13 +226,13 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
-				return new ProxyResponseOk(jsonString, "application/json");
+				return new ProxyResponseJSONOk(jsonString);
 			}
 			/*
 			 * If we get here, then we encountered a CA cert that is older, or possibly
 			 * re-issued without altering notBefore and notAfter.  Out of caution, reject. 
 			 */
-			return new ProxyResponseServerError("Entry with more recent notBefore already exists");
+			return new ProxyResponseBadRequest("Entry with more recent notBefore already exists");
 		}
 	}
 

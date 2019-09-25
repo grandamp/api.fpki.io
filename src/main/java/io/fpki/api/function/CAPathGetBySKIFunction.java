@@ -10,9 +10,9 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
-import io.fpki.api.apigateway.ProxyResponseOk;
+import io.fpki.api.apigateway.ProxyResponseJSONOk;
 import io.fpki.api.apigateway.ProxyResponseServerError;
-import io.fpki.api.constants.TrustAnchor;
+import io.fpki.api.constants.APISettings;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
@@ -48,21 +48,21 @@ public class CAPathGetBySKIFunction implements RequestHandler<ProxyRequest, Prox
 				log.error(e);
 				return new ProxyResponseServerError("Inconsistency or encoding error in data storage");
 			}
-			if (currentEntry.caAKI.equalsIgnoreCase(TrustAnchor.getTrustAnchor().caAKI)) {
-				return new ProxyResponseOk(currentEntry.toString(), "application/json");
+			if (currentEntry.caAKI.equalsIgnoreCase(APISettings.instance().getTrustAnchor().caAKI)) {
+				return new ProxyResponseJSONOk(currentEntry.toString());
 			} else {
 				/*
 				 * - Next, find the issuing CA from this entries AKI, and set it
 				 * as our primary entry, with the current entry nested as a
 				 * caSubordinate value.
 				 */
-				while (!currentEntry.caAKI.equalsIgnoreCase(TrustAnchor.getTrustAnchor().caAKI)) {
+				while (!currentEntry.caAKI.equalsIgnoreCase(APISettings.instance().getTrustAnchor().caAKI)) {
 					currentEntry = getIssuerAndAppendAsSub(currentEntry);
 					if (null == currentEntry) {
 						return new ProxyResponseServerError("Inconsistency or encoding error in data storage");
 					}
 				}
-				return new ProxyResponseOk(currentEntry.toString(), "application/json");
+				return new ProxyResponseJSONOk(currentEntry.toString());
 			}
 		} else {
 			return skiResponse;

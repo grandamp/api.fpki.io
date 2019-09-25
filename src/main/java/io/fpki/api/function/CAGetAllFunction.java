@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import io.fpki.api.apigateway.ProxyRequest;
 import io.fpki.api.apigateway.ProxyResponse;
-import io.fpki.api.apigateway.ProxyResponseOk;
+import io.fpki.api.apigateway.ProxyResponseJSONOk;
 import io.fpki.api.dynamodb.DynamoDBCAEntry;
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
 import io.fpki.api.function.utilities.POJOFunctionUtil;
@@ -29,7 +29,7 @@ public class CAGetAllFunction implements RequestHandler<ProxyRequest, ProxyRespo
 		log.info(POJOFunctionUtil.pojoToString(request));
 		List<DynamoDBCAEntryPOJO> ddbEntries = ddbEntry.getEveryCA();
 		log.info("Found " + ddbEntries.size() + " total entries.");
-		return new ProxyResponseOk(POJOFunctionUtil.pojoToString(ddbEntries), "application/json");
+		return new ProxyResponseJSONOk(POJOFunctionUtil.pojoToString(ddbEntries));
 	}
 
 }
