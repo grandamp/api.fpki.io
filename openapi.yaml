@@ -1,0 +1,247 @@
+openapi: 3.0.1
+info:
+  title: api.fpki.io
+  version: '1.0'
+servers:
+  - url: 'https://api.fpki.io/v1'
+paths:
+  /ca:
+    get:
+      operationId: CAGetAllFunction
+      summary: Get all CAs
+      responses:
+        200:
+          description: response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/arrayOfEntity'
+    post:
+      operationId: CACreateEntryFunction
+      summary: Create a CA entry
+      requestBody:
+        description: The CA entry
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/entity'
+        required: true
+      responses:
+        200:
+          description: response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/entity'
+  /ca/{caSKI}:
+    get:
+      operationId: CAGetBySKIFunction
+      summary: Get a specific CA by subjectKeyIdentifier
+      parameters:
+      - name: caSKI
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: response
+          content:
+            application/ocsp-response:
+              schema:
+                $ref: '#/components/schemas/entity'
+  /caPath:
+    get:
+      operationId: CAPathGetAllFunction
+      summary: Get all CAs
+      responses:
+        200:
+          description: response
+          content:
+            application/ocsp-response:
+              schema:
+                $ref: '#/components/schemas/nestedEntity'
+  /caPath/{caSKI}:
+    get:
+      operationId: CAPathGetBySKIFunction
+      summary: Get a specific CA by subjectKeyIdentifier
+      parameters:
+      - name: caSKI
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: response
+          content:
+            application/ocsp-response:
+              schema:
+                $ref: '#/components/schemas/nestedEntity'
+  /caPathAsPEM:
+    get:
+      operationId: CAPathAsPEMGetAllFunction
+      summary: Get all CAs
+      responses:
+        200:
+          description: response
+          content:
+            text/plain:
+              schema:
+                type: string
+  '/caPathAsPEM/{caSKI}':
+    get:
+      operationId: CAPathAsPEMGetBySKIFunction
+      summary: Get a specific CA by subjectKeyIdentifier
+      parameters:
+      - name: caSKI
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: response
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    entity:
+      required:
+      - caCert
+      - caCrl
+      type: object
+      properties:
+        caAKI:
+          minLength: 40
+          maxLength: 40
+          type: string
+          description: The Hex-String representation of the authorityKeyIdentifier 
+            keyIdentifier value
+        caCert:
+          maxLength: 8192
+          pattern: ^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$
+          type: string
+          description: A base64 encoded X509 Certificate
+          format: byte
+        caCrl:
+          minLength: 11
+          maxLength: 2083
+          type: string
+          description: The CRL HTTP URL, signed by this CA 
+        caHash:
+          minLength: 64
+          maxLength: 64
+          type: string
+          description: The Hex-String representation of the SHA-256 digest value of 
+            the DER encoded certificate
+        caIssuer:
+          minLength: 3
+          maxLength: 2083
+          type: string
+          description: The RFC 2253 encoding of the certificate's issuer
+        caNotAfter:
+          minLength: 10
+          maxLength: 30
+          type: string
+          description: The certificate expiry time formatted using ISO8601
+        caNotBefore:
+          minLength: 10
+          maxLength: 30
+          type: string
+          description: The certificate issuance time formatted using ISO8601
+        caSerial:
+          minLength: 2
+          maxLength: 128
+          type: string
+          description: The Hex-String representation of the ASN.1 Integer value of
+            the certificate serial number
+        caSKI:
+          minLength: 40
+          maxLength: 40
+          type: string
+          description: The Hex-String representation of the subjectKeyIdentifier 
+            keyIdentifier value
+        caSubject:
+          minLength: 3
+          maxLength: 2083
+          type: string
+          description: The RFC 2253 encoding of the certificate's subject
+    arrayOfEntity:
+      minItems: 0
+      maxItems: 256
+      type: array
+      description: An array of entity objects
+      items:
+        properties:
+          schema:
+            $ref: '#/components/schemas/entity'
+    nestedEntity:
+      type: object
+      properties:
+        caAKI:
+          minLength: 40
+          maxLength: 40
+          type: string
+          description: The Hex-String representation of the authorityKeyIdentifier 
+            keyIdentifier value
+        caCert:
+          maxLength: 8192
+          pattern: ^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$
+          type: string
+          description: A base64 encoded X509 Certificate
+          format: byte
+        caCrl:
+          minLength: 11
+          maxLength: 2083
+          type: string
+          description: The CRL HTTP URL, signed by this CA 
+        caHash:
+          minLength: 64
+          maxLength: 64
+          type: string
+          description: The Hex-String representation of the SHA-256 digest value of 
+            the DER encoded certificate
+        caIssuer:
+          minLength: 3
+          maxLength: 2083
+          type: string
+          description: The RFC 2253 encoding of the certificate's issuer
+        caNotAfter:
+          minLength: 10
+          maxLength: 30
+          type: string
+          description: The certificate expiry time formatted using ISO8601
+        caNotBefore:
+          minLength: 10
+          maxLength: 30
+          type: string
+          description: The certificate issuance time formatted using ISO8601
+        caSerial:
+          minLength: 2
+          maxLength: 128
+          type: string
+          description: The Hex-String representation of the ASN.1 Integer value of
+            the certificate serial number
+        caSKI:
+          minLength: 40
+          maxLength: 40
+          type: string
+          description: The Hex-String representation of the subjectKeyIdentifier 
+            keyIdentifier value
+        caSubject:
+          minLength: 3
+          maxLength: 2083
+          type: string
+          description: The RFC 2253 encoding of the certificate's subject
+        caSubordinates:
+          minItems: 0
+          maxItems: 256
+          type: array
+          description: An array of nestedEntity objects
+          items:
+            properties:
+              schema:
+                $ref: '#/components/schemas/nestedEntity'
