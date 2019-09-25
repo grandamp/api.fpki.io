@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -94,34 +94,19 @@ public class CAEntryWithSubs {
 		this.caSubordinates = caSubordinates;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
-		JsonStringEncoder e = JsonStringEncoder.getInstance();
-		StringBuffer sb = new StringBuffer();
-		sb.append("{");
-		sb.append("\"caAKI\":\"" + new String(e.quoteAsUTF8(caAKI)) + "\",");
-		sb.append("\"caCert\":\"" + new String(e.quoteAsUTF8(caCert)) + "\",");
-		sb.append("\"caCrl\":\"" + new String(e.quoteAsUTF8(caCrl)) + "\",");
-		sb.append("\"caHash\":\"" + new String(e.quoteAsUTF8(caHash)) + "\",");
-		sb.append("\"caIssuer\":\"" + new String(e.quoteAsUTF8(caIssuer)) + "\",");
-		sb.append("\"caNotAfter\":\"" + new String(e.quoteAsUTF8(caNotAfter)) + "\",");
-		sb.append("\"caNotBefore\":\"" + new String(e.quoteAsUTF8(caNotBefore)) + "\",");
-		sb.append("\"caSerial\":\"" + new String(e.quoteAsUTF8(caSerial)) + "\",");
-		sb.append("\"caSKI\":\"" + new String(e.quoteAsUTF8(caSKI)) + "\",");
-		sb.append("\"caSubject\":\"" + new String(e.quoteAsUTF8(caSubject)) + "\"");
-		if (null != caSubordinates) {
-			sb.append(",");
-			sb.append("\"caSubordinates\":[");
-			for (int i = 0; i < caSubordinates.length; i++) {
-				sb.append(caSubordinates[i].toString());
-				if (i < caSubordinates.length - 1) {
-					sb.append(",");
-				}
-			}
-			sb.append("]");
+		ObjectMapper mapper = POJOObjectMapper.instance().mapper();
+		try {
+			return mapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
 		}
-		sb.append("}");
-		return sb.toString();
 	}
 
 	/**
