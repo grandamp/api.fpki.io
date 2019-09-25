@@ -82,6 +82,8 @@ openssl crl2pkcs7 -outform DER -out ./examples/ocio_ca5_fullpath.p7b -nocrl -cer
 
 ```
 
+While these quick examples demonstrate some of the basic outputs of the API, [detailed documentation for the API can be found here](https://apidoc.fpki.io/)
+
 
 Security Considerations
 -----------------------
