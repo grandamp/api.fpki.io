@@ -247,13 +247,13 @@ public class X509FunctionUtil {
 							for (GeneralName currentGn : gnArr) {
 								if (currentGn.getTagNo() == GeneralName.uniformResourceIdentifier) {
 									URL url = null;
-									try {
-										url = new URL(currentGn.getName().toString());
-									} catch (MalformedURLException e) {
-										e.printStackTrace();
-									}
-									if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
-										urls.add(url);
+									if (currentGn.getName().toString().toLowerCase().startsWith("http")) {
+										try {
+											url = new URL(currentGn.getName().toString());
+											urls.add(url);
+										} catch (MalformedURLException e) {
+											e.printStackTrace();
+										}
 									}
 								}
 							}
@@ -267,13 +267,13 @@ public class X509FunctionUtil {
 								for (GeneralName currentGn : gnArr) {
 									if (currentGn.getTagNo() == GeneralName.uniformResourceIdentifier) {
 										URL url = null;
-										try {
-											url = new URL(currentGn.getName().toString());
-										} catch (MalformedURLException e) {
-											e.printStackTrace();
-										}
-										if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
-											urls.add(url);
+										if (currentGn.getName().toString().toLowerCase().startsWith("http")) {
+											try {
+												url = new URL(currentGn.getName().toString());
+												urls.add(url);
+											} catch (MalformedURLException e) {
+												e.printStackTrace();
+											}
 										}
 									}
 								}
@@ -311,13 +311,13 @@ public class X509FunctionUtil {
 						GeneralName al = currentAd.getAccessLocation();
 						if (al.getTagNo() == GeneralName.uniformResourceIdentifier) {
 							URL url = null;
-							try {
-								url = new URL(al.getName().toString());
-							} catch (MalformedURLException e) {
-								e.printStackTrace();
-							}
-							if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
-								urls.add(url);
+							if (al.getName().toString().toLowerCase().startsWith("http")) {
+								try {
+									url = new URL(al.getName().toString());
+									urls.add(url);
+								} catch (MalformedURLException e) {
+									e.printStackTrace();
+								}
 							}
 						}
 					}
@@ -352,13 +352,13 @@ public class X509FunctionUtil {
 						GeneralName al = currentAd.getAccessLocation();
 						if (al.getTagNo() == GeneralName.uniformResourceIdentifier) {
 							URL url = null;
-							try {
-								url = new URL(al.getName().toString());
-							} catch (MalformedURLException e) {
-								e.printStackTrace();
-							}
-							if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
-								urls.add(url);
+							if (al.getName().toString().toLowerCase().startsWith("http")) {
+								try {
+									url = new URL(al.getName().toString());
+									urls.add(url);
+								} catch (MalformedURLException e) {
+									e.printStackTrace();
+								}
 							}
 						}
 					}
@@ -393,13 +393,13 @@ public class X509FunctionUtil {
 						GeneralName al = currentAd.getAccessLocation();
 						if (al.getTagNo() == GeneralName.uniformResourceIdentifier) {
 							URL url = null;
-							try {
-								url = new URL(al.getName().toString());
-							} catch (MalformedURLException e) {
-								e.printStackTrace();
-							}
-							if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
-								urls.add(url);
+							if (al.getName().toString().toLowerCase().startsWith("http")) {
+								try {
+									url = new URL(al.getName().toString());
+									urls.add(url);
+								} catch (MalformedURLException e) {
+									e.printStackTrace();
+								}
 							}
 						}
 					}

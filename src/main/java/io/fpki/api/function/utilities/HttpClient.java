@@ -67,6 +67,7 @@ public class HttpClient {
 			URLResponse responseData = new URLResponse();
 			responseData.url = url;
 			responseData.urlResponseTime = responseTime;
+			responseData.urlCode = statusCode;
 			responseData.urlType = type;
 			Header[] headerArr = response.getAllHeaders();
 			Map<String, String> headers = new HashMap<String, String>();
@@ -83,10 +84,18 @@ public class HttpClient {
 				response.close();
 				return null;
 			} else {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				response.getEntity().writeTo(baos);
-				response.close();
-				return baos.toByteArray();
+				if (null != headers.get("Content-Length")) {
+					Integer length = new Integer(headers.get("Content-Length"));
+					int contentLength = length.intValue();
+					if (contentLength <= APISettings.instance().getHTTPMaxResponseSize()) {
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						response.getEntity().writeTo(baos);
+						response.close();
+						return baos.toByteArray();
+					}
+					throw new HttpClientException("Exception while requesting [" + url + "]: Max size exceeded: " + contentLength);
+				}
+				throw new HttpClientException("Exception while requesting [" + url + "]: No Content-Length header");
 			}
 		} catch (final UnknownHostException e) {
 			log.fatal("DNS or Connectivity error?:");

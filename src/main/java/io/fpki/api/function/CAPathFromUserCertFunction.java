@@ -1,8 +1,14 @@
 package io.fpki.api.function;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +23,8 @@ import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.apigateway.ProxyResponseBadRequest;
 import io.fpki.api.apigateway.ProxyResponseJSONOk;
 import io.fpki.api.constants.APISettings;
+import io.fpki.api.function.utilities.HttpClient;
+import io.fpki.api.function.utilities.HttpClientException;
 import io.fpki.api.function.utilities.X509FunctionUtil;
 import io.fpki.api.pojo.UserCert;
 
@@ -45,6 +53,16 @@ public class CAPathFromUserCertFunction implements RequestHandler<ProxyRequest, 
 			userCertificate = X509FunctionUtil.getCertificate(submittedCert.userCert);
 		} catch (CertificateException | IllegalArgumentException e) {
 			return new ProxyResponseBadRequest("Error decoding userCert: " + e.getMessage());
+		}
+		try {
+			userCertificate.checkValidity();
+		} catch (CertificateExpiredException e) {
+			return new ProxyResponseBadRequest("The certificate submitted is expired");
+		} catch (CertificateNotYetValidException e) {
+			return new ProxyResponseBadRequest("The certificate submitted is not yet valid");
+		}
+		if (X509FunctionUtil.isCA(userCertificate)) {
+			return new ProxyResponseBadRequest("The certificate submitted is a CA certificate");
 		}
 		/*
 		 * Create a new UserCert object based on our processing
@@ -85,7 +103,35 @@ public class CAPathFromUserCertFunction implements RequestHandler<ProxyRequest, 
 			aiaUrlList.add(aiaUrl.toString());
 		}
 		processedCert.urlAIA = aiaUrlList.toArray(new String[aiaUrlList.size()]);
-		return new ProxyResponseJSONOk(processedCert.toString());
+		/*
+		 * Now that we have some URL's to download, let's take a look...
+		 * 
+		 */
+		byte[] crlBytes = null;
+		try {
+			crlBytes = HttpClient.getInstance().getRequest(processedCert.urlCRL[0], "CRL");
+		} catch (HttpClientException e) {
+			log.error(e);
+			return new ProxyResponseBadRequest("error downloading crl: " + e.getMessage());
+		}
+		CertificateFactory cf = null;
+		X509CRL crl = null;
+		try {
+			cf = CertificateFactory.getInstance("X.509");
+			crl = (X509CRL) cf.generateCRL(new ByteArrayInputStream(crlBytes));
+		} catch (CertificateException e) {
+			return new ProxyResponseBadRequest("error downloading crl: " + e.getMessage());
+		} catch (CRLException e) {
+			return new ProxyResponseBadRequest("error downloading crl: " + e.getMessage());
+		}
+		if (crl.isRevoked(userCertificate)) {
+			return new ProxyResponseBadRequest("Certificate Revoked");
+		} else {
+			/*
+			 * TODO:  Write CRL to S3 bucket, it *may* be useful
+			 */
+			return new ProxyResponseJSONOk(processedCert.toString());
+		}
 	}
 
 }
