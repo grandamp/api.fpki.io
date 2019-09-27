@@ -25,40 +25,47 @@ public class APISettings {
 	private final static String caSerial = "0130";
 	private final static String caSKI = "AD0C7A755CE5F398C479980EAC28FD97F4E702FC";
 	private final static String caSubject = "CN=Federal Common Policy CA,OU=FPKI,O=U.S. Government,C=US";
-	private final static CAEntry TRUST_ANCHOR = new CAEntry(caAKI, caCert, caCrl, caHash, caIssuer, caNotAfter, caNotBefore, caSerial, caSKI, caSubject);
-	
+	private final static CAEntry TRUST_ANCHOR = new CAEntry(caAKI, caCert, caCrl, caHash, caIssuer, caNotAfter,
+			caNotBefore, caSerial, caSKI, caSubject);
+
 	private final static BouncyCastleProvider JCE_PROVIDER = new BouncyCastleProvider();
 
 	private final static int PEM_SIZE_LIMIT = 8192;
 
-	private static Map<String,String> CORS_HEADERS;
+	private final static int HTTP_TIMEOUT = 15;
 
-	private static Map<String,String> HEADERS_PLAINTEXT;
+	private final static int HTTP_RESPONSE_MAX_BYTES = 31457280;
 
-	private static Map<String,String> HEADERS_JSON;
+	private static Map<String, String> CORS_HEADERS;
+
+	private static Map<String, String> HEADERS_PLAINTEXT;
+
+	private static Map<String, String> HEADERS_JSON;
 
 	private APISettings() {
 		log.info("Creating APISettings Instance");
 		/*
-		 * CORS headers:
-		 *   Access-Control-Allow-Origin: *
-		 *   Access-Control-Allow-Methods: GET, POST
-		 *   Access-Control-Allow-Headers: Content-Type
+		 * CORS headers: Access-Control-Allow-Origin: *
+		 * Access-Control-Allow-Methods: GET, POST Access-Control-Allow-Headers:
+		 * Content-Type
 		 */
-		CORS_HEADERS = new HashMap<String,String>();
+		CORS_HEADERS = new HashMap<String, String>();
 		CORS_HEADERS.put("Access-Control-Allow-Origin", "*");
-		CORS_HEADERS.put("Access-Control-Allow-Methods", "GET, POST");
+		CORS_HEADERS.put("Access-Control-Allow-Methods", "*");
 		CORS_HEADERS.put("Access-Control-Allow-Headers", "Content-Type");
 		/*
-		 * Content-Type Header Values:
-		 *   Content-Type: application/json
-		 *   Content-Type: text/plain
+		 * Header Values:
 		 */
-		HEADERS_JSON = new HashMap<String,String>();
+		/*
+		 * Content-Type: application/json
+		 */
+		HEADERS_JSON = new HashMap<String, String>();
 		HEADERS_JSON.putAll(CORS_HEADERS);
 		HEADERS_JSON.put("Content-Type", "application/json");
-
-		HEADERS_PLAINTEXT = new HashMap<String,String>();
+		/*
+		 * Content-Type: text/plain
+		 */
+		HEADERS_PLAINTEXT = new HashMap<String, String>();
 		HEADERS_PLAINTEXT.putAll(CORS_HEADERS);
 		HEADERS_PLAINTEXT.put("Content-Type", "text/plain");
 	}
@@ -73,11 +80,11 @@ public class APISettings {
 		return instance;
 	}
 
-	public Map<String,String> getJSONHeaders() {
+	public Map<String, String> getJSONHeaders() {
 		return HEADERS_JSON;
 	}
 
-	public Map<String,String> getPlaintextHeaders() {
+	public Map<String, String> getPlaintextHeaders() {
 		return HEADERS_PLAINTEXT;
 	}
 
@@ -93,4 +100,11 @@ public class APISettings {
 		return TRUST_ANCHOR;
 	}
 
+	public int getHTTPTimeout() {
+		return HTTP_TIMEOUT;
+	}
+
+	public int getHTTPMaxResponseSize() {
+		return HTTP_RESPONSE_MAX_BYTES;
+	}
 }

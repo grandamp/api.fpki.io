@@ -46,13 +46,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 
 	@Override
 	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
-		String jsonString = null;
-		try {
-			jsonString = mapper.getMapper().writeValueAsString(request);
-			log.info(jsonString);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+		log.info(request.toString());
 		CAEntry submittedEntry = null;
 		try {
 			submittedEntry = CAEntry.getInstance(request.getBody());
@@ -63,11 +57,12 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 			return new ProxyResponseBadRequest("Request must include caCrl & caCert objects");
 		}
 		if (submittedEntry.caCert.length() >= APISettings.instance().getPEMSizeLimit()) {
-			return new ProxyResponseBadRequest("Size limit " + APISettings.instance().getPEMSizeLimit() + "(bytes) exceeded for caCert object");
+			return new ProxyResponseBadRequest(
+					"Size limit " + APISettings.instance().getPEMSizeLimit() + "(bytes) exceeded for caCert object");
 		}
 		X509Certificate newCertificate = null;
 		try {
-			newCertificate = X509FunctionUtil.getCertificate(submittedEntry);
+			newCertificate = X509FunctionUtil.getCertificate(submittedEntry.caCert);
 		} catch (CertificateException | IllegalArgumentException e) {
 			return new ProxyResponseBadRequest("Error decoding caCert: " + e.getMessage());
 		}
@@ -96,12 +91,11 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 		}
 		newEntry.setCaCert(caCert);
 		/*
-		 * Before we proceed, we should do the obvious:
-		 *   - check temporal validity,and;
-		 *   - see *if* this is really a CA certificate.
-		 *   
-		 * Basic logic would be to check out Basic Constraints, and check to
-		 * see if CA=True
+		 * Before we proceed, we should do the obvious: - check temporal
+		 * validity,and; - see *if* this is really a CA certificate.
+		 * 
+		 * Basic logic would be to check out Basic Constraints, and check to see
+		 * if CA=True
 		 */
 		try {
 			newCertificate.checkValidity();
@@ -134,8 +128,8 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 		 */
 		newEntry.setCaIssuer(newCertificate.getIssuerX500Principal().getName());
 		/*
-		 * Date formatter for caNotAfter & caNotBefore
-		 * See: http://xkcd.com/1179/
+		 * Date formatter for caNotAfter & caNotBefore See:
+		 * http://xkcd.com/1179/
 		 */
 		SimpleDateFormat dFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 		dFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -162,8 +156,8 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 		 */
 		newEntry.setCaSubject(newCertificate.getSubjectX500Principal().getName());
 		/*
-		 * Now that we have a new entry from the submitted request,
-		 * lets check and see if we should actually add the entry
+		 * Now that we have a new entry from the submitted request, lets check
+		 * and see if we should actually add the entry
 		 */
 		List<DynamoDBCAEntryPOJO> entries = ddbEntry.getCA(newEntry.getCaSKI());
 		if (entries.isEmpty()) {
@@ -190,13 +184,14 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 					 * Invalid certificate, rejecting
 					 */
 					log.error("Validation using issuing CA failed", e);
-					return new ProxyResponseBadRequest("Error validating certificate using issuer Public Key: " + e.getMessage());
+					return new ProxyResponseBadRequest(
+							"Error validating certificate using issuer Public Key: " + e.getMessage());
 				}
 				/*
 				 * Adding new entry
 				 */
 				ddbEntry.createCA(newEntry);
-				jsonString = null;
+				String jsonString = null;
 				try {
 					jsonString = mapper.getMapper().writeValueAsString(newEntry);
 				} catch (JsonProcessingException e) {
@@ -220,7 +215,7 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				 * Certificate has a newer issuance date, updating
 				 */
 				ddbEntry.createCA(newEntry);
-				jsonString = null;
+				String jsonString = null;
 				try {
 					jsonString = mapper.getMapper().writeValueAsString(newEntry);
 				} catch (JsonProcessingException e) {
@@ -229,12 +224,12 @@ public class CACreateEntryFunction implements RequestHandler<ProxyRequest, Proxy
 				return new ProxyResponseJSONOk(jsonString);
 			}
 			/*
-			 * If we get here, then we encountered a CA cert that is older, or possibly
-			 * re-issued without altering notBefore and notAfter.  Out of caution, reject. 
+			 * If we get here, then we encountered a CA cert that is older, or
+			 * possibly re-issued without altering notBefore and notAfter. Out
+			 * of caution, reject.
 			 */
 			return new ProxyResponseBadRequest("Entry with more recent notBefore already exists");
 		}
 	}
-
 
 }

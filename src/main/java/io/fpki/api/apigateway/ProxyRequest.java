@@ -2,6 +2,11 @@ package io.fpki.api.apigateway;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.fpki.api.constants.POJOObjectMapper;
+
 /*
  * Per: https://willhamill.com/2016/12/12/aws-api-gateway-lambda-proxy-request-and-response-objects
  * 
@@ -104,6 +109,22 @@ public class ProxyRequest {
 
 	public void setBase64Encoded(boolean base64Encoded) {
 		isBase64Encoded = base64Encoded;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		ObjectMapper mapper = POJOObjectMapper.instance().getMapper();
+		try {
+			return mapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }

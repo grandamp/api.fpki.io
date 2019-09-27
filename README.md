@@ -56,6 +56,8 @@ curl -v -X POST -H "Content-Type: application/json" -d '{"caCert":"MIIEYDCCA0igA
 
 See http://docs.aws.amazon.com/lambda/latest/dg/deploying-lambda-apps.html.
 
+If using the SwaggerUI via the API Gateway, [you will need to enable a mock OPTIONS operation with CORS headers on the API Gateway](https://enable-cors.org/server_awsapigateway.html), so the CORS pre-flight check will pass.
+
 
 Documentation
 -------------

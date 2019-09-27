@@ -132,21 +132,21 @@ Resources:
           Properties:
             Path: /caPathAsPEM/{caSKI}
             Method: GET
-#  CAPathFromUserCertFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      Handler: 'io.fpki.api.function.CAPathFromUserCertFunction::handleRequest'
-#      Runtime: java8
-#      Timeout: 30
-#      MemorySize: 512
-#      CodeUri: target/api.jar
-#      Policies:
-#        - DynamoDBCrudPolicy:
-#            TableName: !Ref CATable
-#      Events:
-#        GetByPathApi:
-#          Type: Api
-#          Properties:
-#            Path: /caPathFromUserCert
-#            Method: POST
+  CAPathFromUserCertFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'io.fpki.api.function.CAPathFromUserCertFunction::handleRequest'
+      Runtime: java8
+      Timeout: 30
+      MemorySize: 512
+      CodeUri: target/api.jar
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CATable
+      Events:
+        GetByPathApi:
+          Type: Api
+          Properties:
+            Path: /caPathFromUserCert
+            Method: POST
 

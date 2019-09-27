@@ -3,6 +3,8 @@ package io.fpki.api.function.utilities;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,12 +13,25 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.x509.AccessDescription;
+import org.bouncycastle.asn1.x509.AuthorityInformationAccess;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.CRLDistPoint;
+import org.bouncycastle.asn1.x509.DistributionPoint;
+import org.bouncycastle.asn1.x509.DistributionPointName;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -24,7 +39,7 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import com.amazonaws.util.Base64;
 
 import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
-import io.fpki.api.pojo.CAEntry;
+import io.fpki.api.function.utilities.asn1.SubjectInformationAccess;
 import io.fpki.api.pojo.CAEntryWithSubs;
 
 public class X509FunctionUtil {
@@ -39,7 +54,7 @@ public class X509FunctionUtil {
 	 * 
 	 * @param entry
 	 * @return String
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static String toPEM(CAEntryWithSubs entry) {
 		StringBuffer sb = new StringBuffer();
@@ -89,11 +104,12 @@ public class X509FunctionUtil {
 	 * @throws IllegalArgumentException
 	 *             If there is a problem with the input base64
 	 */
-	public static X509Certificate getCertificate(CAEntry entry) throws CertificateException, IllegalArgumentException {
+	public static X509Certificate getCertificate(String b64String)
+			throws CertificateException, IllegalArgumentException {
 		byte[] certBytes = null;
 		CertificateFactory cf;
 		ByteArrayInputStream bais;
-		certBytes = Base64.decode(entry.caCert);
+		certBytes = Base64.decode(b64String);
 		if (null != certBytes) {
 			cf = CertificateFactory.getInstance("X509");
 			bais = new ByteArrayInputStream(certBytes);
@@ -124,16 +140,41 @@ public class X509FunctionUtil {
 	}
 
 	/**
+	 * Returns the extensions from the provided certificate
+	 * 
+	 * @param cert
+	 * @return
+	 */
+	private static Extensions getExtensions(X509Certificate cert) {
+		Set<String> critExt = cert.getCriticalExtensionOIDs();
+		Set<String> nonCritExt = cert.getNonCriticalExtensionOIDs();
+		Set<Extension> extensions = new HashSet<Extension>();
+		for (String oidStr : critExt) {
+			ASN1ObjectIdentifier extnId = new ASN1ObjectIdentifier(oidStr);
+			byte[] extBytes = cert.getExtensionValue(oidStr);
+			extensions.add(new Extension(extnId, true, ASN1OctetString.getInstance(extBytes)));
+		}
+		for (String oidStr : nonCritExt) {
+			ASN1ObjectIdentifier extnId = new ASN1ObjectIdentifier(oidStr);
+			byte[] extBytes = cert.getExtensionValue(oidStr);
+			extensions.add(new Extension(extnId, false, ASN1OctetString.getInstance(extBytes)));
+		}
+		Extension[] extArr = new Extension[critExt.size() + nonCritExt.size()];
+		return new Extensions(extensions.toArray(extArr));
+	}
+
+	/**
+	 * Returns a boolean answer to the question: "Is this a CA certificate?"
 	 * 
 	 * @param cert
 	 * @return
 	 */
 	public static boolean isCA(X509Certificate cert) {
-		byte[] bcExtValue = cert.getExtensionValue(Extension.basicConstraints.getId());
-		if (null != bcExtValue) {
-			byte[] bcValue = ASN1OctetString.getInstance(bcExtValue).getOctets();
-			BasicConstraints bc = BasicConstraints.getInstance(bcValue);
-			return bc.isCA();
+		Extensions ext = getExtensions(cert);
+		Extension bc = ext.getExtension(Extension.basicConstraints);
+		if (null != bc) {
+			BasicConstraints basicConstraints = BasicConstraints.getInstance(bc.getExtnValue().getOctets());
+			return basicConstraints.isCA();
 		}
 		/*
 		 * basicConstraints extension not present, so, not a CA
@@ -142,17 +183,19 @@ public class X509FunctionUtil {
 	}
 
 	/**
+	 * Returns the Hex-String representation of the authorityKeyIdentifer
+	 * keyIdentifier value
 	 * 
 	 * @param cert
 	 * @return String representation of keyIdentifier value in Hex
 	 */
 	public static String getAuthorityKeyIdentifier(X509Certificate cert) {
-		byte[] akiExtValue = cert.getExtensionValue(Extension.authorityKeyIdentifier.getId());
-		if (null != akiExtValue) {
-			byte[] akiValue = ASN1OctetString.getInstance(akiExtValue).getOctets();
-			AuthorityKeyIdentifier akid = AuthorityKeyIdentifier.getInstance(akiValue);
-			byte[] subjectKeyID = akid.getKeyIdentifier();
-			return byteArrayToString(subjectKeyID);
+		Extensions ext = getExtensions(cert);
+		Extension aki = ext.getExtension(Extension.authorityKeyIdentifier);
+		if (null != aki) {
+			AuthorityKeyIdentifier authorityKeyIdentifier = AuthorityKeyIdentifier
+					.getInstance(aki.getExtnValue().getOctets());
+			return byteArrayToString(authorityKeyIdentifier.getKeyIdentifier());
 		} else {
 			if (cert.getIssuerX500Principal().getName().equalsIgnoreCase(cert.getSubjectX500Principal().getName())) {
 				return new String("TRUST_ANCHOR_NOT_APPLICABLE");
@@ -162,15 +205,211 @@ public class X509FunctionUtil {
 		}
 	}
 
+	/**
+	 * Returns the Hex-String representation of the subjectKeyIdentifer
+	 * keyIdentifier value
+	 * 
+	 * @param cert
+	 * @return
+	 */
 	public static String getSubjectKeyIdentifier(X509Certificate cert) {
-		byte[] skiExtValue = cert.getExtensionValue(Extension.subjectKeyIdentifier.getId());
-		if (null != skiExtValue) {
-			byte[] skiValue = ASN1OctetString.getInstance(skiExtValue).getOctets();
-			SubjectKeyIdentifier skid = SubjectKeyIdentifier.getInstance(skiValue);
-			byte[] authorityKeyID = skid.getKeyIdentifier();
-			return byteArrayToString(authorityKeyID);
+		Extensions ext = getExtensions(cert);
+		Extension ski = ext.getExtension(Extension.subjectKeyIdentifier);
+		if (null != ski) {
+			SubjectKeyIdentifier subjectKeyIdentifier = SubjectKeyIdentifier
+					.getInstance(ski.getExtnValue().getOctets());
+			return byteArrayToString(subjectKeyIdentifier.getKeyIdentifier());
 		} else {
 			return getKeyHash(cert.getPublicKey());
+		}
+	}
+
+	/**
+	 * Returns URL[] containing all HTTP URLs in the cRLDistributionPoints
+	 * extension.
+	 * 
+	 * @param cert
+	 * @return
+	 */
+	public static URL[] getCRLDistributionPointURLs(X509Certificate cert) {
+		List<URL> urls = new ArrayList<URL>();
+		Extensions ext = getExtensions(cert);
+		Extension cdp = ext.getExtension(Extension.cRLDistributionPoints);
+		if (null != cdp) {
+			CRLDistPoint crlDistPoint = CRLDistPoint.getInstance(cdp.getExtnValue().getOctets());
+			DistributionPoint[] dps = crlDistPoint.getDistributionPoints();
+			if (dps != null) {
+				for (DistributionPoint currentDp : dps) {
+					GeneralNames generalNames = currentDp.getCRLIssuer();
+					if (null != generalNames) {
+						GeneralName[] gnArr = generalNames.getNames();
+						if (null != gnArr) {
+							for (GeneralName currentGn : gnArr) {
+								if (currentGn.getTagNo() == GeneralName.uniformResourceIdentifier) {
+									URL url = null;
+									try {
+										url = new URL(currentGn.getName().toString());
+									} catch (MalformedURLException e) {
+										e.printStackTrace();
+									}
+									if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
+										urls.add(url);
+									}
+								}
+							}
+						}
+					}
+					DistributionPointName distPointName = currentDp.getDistributionPoint();
+					if (null != distPointName) {
+						if (distPointName.getType() == DistributionPointName.FULL_NAME) {
+							GeneralName[] gnArr = GeneralNames.getInstance(distPointName.getName()).getNames();
+							if (null != gnArr) {
+								for (GeneralName currentGn : gnArr) {
+									if (currentGn.getTagNo() == GeneralName.uniformResourceIdentifier) {
+										URL url = null;
+										try {
+											url = new URL(currentGn.getName().toString());
+										} catch (MalformedURLException e) {
+											e.printStackTrace();
+										}
+										if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
+											urls.add(url);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				return urls.toArray(new URL[urls.size()]);
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns URL[] containing all HTTP URLs in the subjectInfoAccess
+	 * extension.
+	 * 
+	 * @param cert
+	 * @return
+	 */
+	public static URL[] getSubjectInfoAccessURLs(X509Certificate cert) {
+		List<URL> urls = new ArrayList<URL>();
+		Extensions ext = getExtensions(cert);
+		Extension sia = ext.getExtension(Extension.subjectInfoAccess);
+		if (null != sia) {
+			SubjectInformationAccess subjectInformationAccess = SubjectInformationAccess
+					.getInstance(sia.getExtnValue().getOctets());
+			AccessDescription[] ad = subjectInformationAccess.getAccessDescriptions();
+			if (null != ad) {
+				for (AccessDescription currentAd : ad) {
+					if (currentAd.getAccessMethod().equals(SubjectInformationAccess.id_ad_caRepository)) {
+						GeneralName al = currentAd.getAccessLocation();
+						if (al.getTagNo() == GeneralName.uniformResourceIdentifier) {
+							URL url = null;
+							try {
+								url = new URL(al.getName().toString());
+							} catch (MalformedURLException e) {
+								e.printStackTrace();
+							}
+							if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
+								urls.add(url);
+							}
+						}
+					}
+				}
+			} else {
+				return null;
+			}
+			return urls.toArray(new URL[urls.size()]);
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns URL[] containing all caIssuers HTTP URLs in the
+	 * authorityInfoAccess extension.
+	 * 
+	 * @param cert
+	 * @return
+	 */
+	public static URL[] getAuthorityInformationAccessURLs(X509Certificate cert) {
+		List<URL> urls = new ArrayList<URL>();
+		Extensions ext = getExtensions(cert);
+		Extension aia = ext.getExtension(Extension.authorityInfoAccess);
+		if (null != aia) {
+			AuthorityInformationAccess authorityInformationAccess = AuthorityInformationAccess
+					.getInstance(aia.getExtnValue().getOctets());
+			AccessDescription[] ad = authorityInformationAccess.getAccessDescriptions();
+			if (null != ad) {
+				for (AccessDescription currentAd : ad) {
+					if (currentAd.getAccessMethod().equals(AccessDescription.id_ad_caIssuers)) {
+						GeneralName al = currentAd.getAccessLocation();
+						if (al.getTagNo() == GeneralName.uniformResourceIdentifier) {
+							URL url = null;
+							try {
+								url = new URL(al.getName().toString());
+							} catch (MalformedURLException e) {
+								e.printStackTrace();
+							}
+							if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
+								urls.add(url);
+							}
+						}
+					}
+				}
+			} else {
+				return null;
+			}
+			return urls.toArray(new URL[urls.size()]);
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns URL[] containing all OCSP HTTP URLs in the authorityInfoAccess
+	 * extension.
+	 * 
+	 * @param cert
+	 * @return
+	 */
+	public static URL[] getAuthorityInformationAccessOCSPURLs(X509Certificate cert) {
+		List<URL> urls = new ArrayList<URL>();
+		Extensions ext = getExtensions(cert);
+		Extension aia = ext.getExtension(Extension.authorityInfoAccess);
+		if (null != aia) {
+			AuthorityInformationAccess authorityInformationAccess = AuthorityInformationAccess
+					.getInstance(aia.getExtnValue().getOctets());
+			AccessDescription[] ad = authorityInformationAccess.getAccessDescriptions();
+			if (null != ad) {
+				for (AccessDescription currentAd : ad) {
+					if (currentAd.getAccessMethod().equals(AccessDescription.id_ad_ocsp)) {
+						GeneralName al = currentAd.getAccessLocation();
+						if (al.getTagNo() == GeneralName.uniformResourceIdentifier) {
+							URL url = null;
+							try {
+								url = new URL(al.getName().toString());
+							} catch (MalformedURLException e) {
+								e.printStackTrace();
+							}
+							if (url != null && url.getProtocol().toLowerCase().startsWith("http")) {
+								urls.add(url);
+							}
+						}
+					}
+				}
+			} else {
+				return null;
+			}
+			return urls.toArray(new URL[urls.size()]);
+		} else {
+			return null;
 		}
 	}
 
