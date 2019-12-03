@@ -4,7 +4,7 @@ Description: API services for api.fpki.io.
 Globals:
   Api:
     EndpointConfiguration: REGIONAL
-    Name: "api.fpki.io"
+    Name: "api.cite.fpki.io"
 Resources:
   CATable:
     Type: AWS::Serverless::SimpleTable
@@ -12,7 +12,7 @@ Resources:
       PrimaryKey:
           Name: caSKI
           Type: String
-      TableName: fpki_list
+      TableName: cite_list
   CAGetAllFunction:
     Type: AWS::Serverless::Function
     Properties:

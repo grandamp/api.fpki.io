@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.amazonaws.util.Base64;
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
-@DynamoDBTable(tableName = "fpki_list")
+@DynamoDBTable(tableName = "cite_list")
 public class DynamoDBCAEntryPOJO {
 
 	private String caAKI;

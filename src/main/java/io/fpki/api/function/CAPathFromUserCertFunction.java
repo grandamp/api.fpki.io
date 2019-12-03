@@ -11,7 +11,9 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -23,6 +25,9 @@ import io.fpki.api.apigateway.ProxyResponse;
 import io.fpki.api.apigateway.ProxyResponseBadRequest;
 import io.fpki.api.apigateway.ProxyResponseJSONOk;
 import io.fpki.api.constants.APISettings;
+import io.fpki.api.constants.POJOObjectMapper;
+import io.fpki.api.dynamodb.DynamoDBCAEntry;
+import io.fpki.api.dynamodb.DynamoDBCAEntryPOJO;
 import io.fpki.api.function.utilities.HttpClient;
 import io.fpki.api.function.utilities.HttpClientException;
 import io.fpki.api.function.utilities.X509FunctionUtil;
@@ -31,6 +36,10 @@ import io.fpki.api.pojo.UserCert;
 public class CAPathFromUserCertFunction implements RequestHandler<ProxyRequest, ProxyResponse> {
 
 	private static final Logger log = Logger.getLogger(CAPathFromUserCertFunction.class);
+
+	private static final POJOObjectMapper mapper = POJOObjectMapper.instance();
+
+	private static final DynamoDBCAEntry ddbEntry = DynamoDBCAEntry.instance();
 
 	@Override
 	public ProxyResponse handleRequest(ProxyRequest request, Context arg1) {
@@ -64,6 +73,12 @@ public class CAPathFromUserCertFunction implements RequestHandler<ProxyRequest, 
 		if (X509FunctionUtil.isCA(userCertificate)) {
 			return new ProxyResponseBadRequest("The certificate submitted is a CA certificate");
 		}
+		/*
+		 * TODO: Check to make sure we have the issuing CA before we download the CRL for the submitted cert.
+		 * 
+		 * 	If we don't have the issuing CA, download the AIA artifact to discover and validate the issuing CA.
+		 * 	We should also limit the number of AIA references we are willing to process, as well as the size of the CMS objects that are fetched.
+		 */
 		/*
 		 * Create a new UserCert object based on our processing
 		 */
@@ -104,9 +119,17 @@ public class CAPathFromUserCertFunction implements RequestHandler<ProxyRequest, 
 		}
 		processedCert.urlAIA = aiaUrlList.toArray(new String[aiaUrlList.size()]);
 		/*
-		 * Now that we have some URL's to download, let's take a look...
-		 * 
+		 * Return the issuer path, if we have the issuer
 		 */
+		List<DynamoDBCAEntryPOJO> entries = ddbEntry.getCA(processedCert.caSKI);
+		if (!entries.isEmpty()) {
+			CAPathGetBySKIFunction getBySki = new CAPathGetBySKIFunction();
+			Map<String, String> pathParams = new HashMap<String,String>();
+			pathParams.put("caSKI", processedCert.caSKI);
+			request.setPathParameters(pathParams);
+			return getBySki.handleRequest(request, arg1);
+		}
+
 		byte[] crlBytes = null;
 		try {
 			crlBytes = HttpClient.getInstance().getRequest(processedCert.urlCRL[0], "CRL");
