@@ -10,6 +10,7 @@ info:
   version: '1.0'
 servers:
   - url: 'https://api.fpki.io/v1'
+  - url: 'https://apicite.fpki.io/v1'
 paths:
   /ca:
     get:
