@@ -13,7 +13,7 @@ Introduction
 
 The intent of this repo is to maintain a fairly simple rest API using AWS Lambda and AWS DynamoDB.
 
-The rest service maintains a list of CA certificates that are part of the [U.S. Federal PKI](https://fpki.idmanagement.gov/).
+The rest service maintains a list of CA certificates that are part of the [U.S. Federal PKI](https://fpki.idmanagement.gov/), that form a path/chain to the [Common Policy Root CA](https://fpki.idmanagement.gov/crls/#federal-common-policy-ca).
 
 The API will only allow CA certificates with *unique* public keys to be added.  This ensures that a given CA certificate will only appear once, in only one certificate path.  This is to avoid confusing relying party applications on *which* path to use when validating a certificate.  For a given CA certificate to be added, the issuing CA *must* have already been submitted to the API.  Below is the JSON object for the Root CA, and all entries that are submitted *must* have a valid path to this Root.
 
