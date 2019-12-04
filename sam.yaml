@@ -4,7 +4,7 @@ Description: API services for api.fpki.io.
 Globals:
   Api:
     EndpointConfiguration: REGIONAL
-    Name: "api.cite.fpki.io"
+    Name: "apicite.fpki.io"
 Resources:
   CATable:
     Type: AWS::Serverless::SimpleTable
